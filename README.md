@@ -31,7 +31,7 @@ const Zakkur = require('zakkur-sdk');
 
 const sdk = new Zakkur({
     apiKey: 'zk_live_xxxxxxxxxxxxxxxx', // احصل عليه من بوابة المطورين
-    baseUrl: '[https://api.zakkur.ai/api](https://api.zakkur.ai/api)', // رابط السيرفر الخاص بك
+    baseUrl: '[https://zakkur.com/api](https://zakkur.com/api)', 
     timeout: 30000, // مهلة الاستجابة (30 ثانية)
     retries: 3      // عدد محاولات إعادة الطلب عند فشل الشبكة
 });
@@ -148,5 +148,6 @@ sdk.board.getHistory()
 استرجاع السجل
 
 لا يوجد
+
 
 تم بناء هذا النظام لتمكين الأتمتة المؤسسية الذكية. لطلب الدعم التقني أو الوصول المخصص، تواصل مع فريق المطورين عبر admin@sopen.ai
