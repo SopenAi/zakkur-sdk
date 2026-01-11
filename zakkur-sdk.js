@@ -24,7 +24,7 @@ class Zakkur {
         this.#apiKey = apiKey;
         this.#baseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
         this.#config = { timeout, retries };
-        this.version = '3.0.2';
+        this.version = '3.0.3'; // تحديث رقم الإصدار
 
         this.board = this.#initBoardModule();
         this.agents = this.#initAgentsProxy();
@@ -43,6 +43,7 @@ class Zakkur {
         };
 
         let body = null;
+
         if (isFileUpload) {
             body = payload;
         } else if (payload) {
@@ -61,12 +62,17 @@ class Zakkur {
                 const contentType = response.headers.get("content-type");
                 let result;
 
-                // التحقق من أن الرد بصيغة JSON قبل المعالجة لضمان القوة والاستقرار
+                // التعامل مع الاستجابات
                 if (contentType && contentType.includes("application/json")) {
                     result = await response.json();
                 } else {
                     const text = await response.text();
-                    throw new ZakkurError("Unexpected non-JSON response from server", response.status, 'INVALID_RESPONSE_FORMAT', { raw: text });
+                    // إذا لم يكن JSON وكان رمز الحالة خطأ، نعتبره خطأ غير متوقع
+                    if (!response.ok) {
+                         throw new ZakkurError("Unexpected non-JSON response from server", response.status, 'INVALID_RESPONSE_FORMAT', { raw: text });
+                    }
+                    // في بعض الحالات النادرة قد ينجح الطلب ولا يعيد JSON
+                    result = { message: text };
                 }
 
                 if (!response.ok) {
@@ -102,6 +108,7 @@ class Zakkur {
 
     #initBoardModule() {
         return {
+            // [تصحيح]: المجلس يتوقع context
             consult: (context) => this.#executeRequest('/decision', 'POST', { context }),
             getHistory: () => this.#executeRequest('/history', 'GET')
         };
@@ -113,14 +120,17 @@ class Zakkur {
             get(target, role) {
                 const agentRole = role.toLowerCase();
                 return {
+                    // [تصحيح]: agentController يتوقع 'context' للاستشارة
                     consult: (userPrompt, options = {}) => 
                         self.#executeRequest(`/agent/${agentRole}/consult`, 'POST', { 
-                            prompt: userPrompt, 
+                            context: userPrompt, 
                             threadId: options.threadId 
                         }),
+                    
+                    // [تصحيح]: agentController يتوقع 'task' للتنفيذ
                     execute: (task, options = {}) => 
                         self.#executeRequest(`/agent/${agentRole}/execute`, 'POST', { 
-                            prompt: task,
+                            task: task, 
                             threadId: options.threadId 
                         })
                 };
