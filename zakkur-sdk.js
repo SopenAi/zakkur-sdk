@@ -24,7 +24,7 @@ class Zakkur {
         this.#apiKey = apiKey;
         this.#baseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
         this.#config = { timeout, retries };
-        this.version = '3.0.3'; // تحديث رقم الإصدار
+        this.version = '3.0.4'; // تحديث الإصدار
 
         this.board = this.#initBoardModule();
         this.agents = this.#initAgentsProxy();
@@ -62,16 +62,13 @@ class Zakkur {
                 const contentType = response.headers.get("content-type");
                 let result;
 
-                // التعامل مع الاستجابات
                 if (contentType && contentType.includes("application/json")) {
                     result = await response.json();
                 } else {
                     const text = await response.text();
-                    // إذا لم يكن JSON وكان رمز الحالة خطأ، نعتبره خطأ غير متوقع
                     if (!response.ok) {
-                         throw new ZakkurError("Unexpected non-JSON response from server", response.status, 'INVALID_RESPONSE_FORMAT', { raw: text });
+                         throw new ZakkurError("Non-JSON response from server", response.status, 'INVALID_FORMAT', { raw: text });
                     }
-                    // في بعض الحالات النادرة قد ينجح الطلب ولا يعيد JSON
                     result = { message: text };
                 }
 
@@ -97,9 +94,7 @@ class Zakkur {
                 clearTimeout(timeoutId);
                 if (error.name === 'AbortError') throw new ZakkurError("Request Timeout", 408, 'TIMEOUT');
                 if (error instanceof ZakkurError) throw error;
-                
                 if (attempt >= maxAttempts) throw new ZakkurError(error.message, 500, 'NET_ERROR');
-                
                 attempt++;
                 await new Promise(r => setTimeout(r, 1000));
             }
@@ -108,7 +103,6 @@ class Zakkur {
 
     #initBoardModule() {
         return {
-            // [تصحيح]: المجلس يتوقع context
             consult: (context) => this.#executeRequest('/decision', 'POST', { context }),
             getHistory: () => this.#executeRequest('/history', 'GET')
         };
@@ -120,14 +114,14 @@ class Zakkur {
             get(target, role) {
                 const agentRole = role.toLowerCase();
                 return {
-                    // [تصحيح]: agentController يتوقع 'context' للاستشارة
+                    // [تصحيح]: إرسال 'context' بدلاً من 'prompt'
                     consult: (userPrompt, options = {}) => 
                         self.#executeRequest(`/agent/${agentRole}/consult`, 'POST', { 
                             context: userPrompt, 
                             threadId: options.threadId 
                         }),
                     
-                    // [تصحيح]: agentController يتوقع 'task' للتنفيذ
+                    // [تصحيح]: إرسال 'task' بدلاً من 'prompt'
                     execute: (task, options = {}) => 
                         self.#executeRequest(`/agent/${agentRole}/execute`, 'POST', { 
                             task: task, 
