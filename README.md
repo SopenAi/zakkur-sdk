@@ -35,7 +35,7 @@
 * **Node.js**: الإصدار 18.0.0 أو أحدث.
 * **API Key**: مفتاح فعال من بوابة المطورين في زكور.
 
-```bash
+
 npm install zakkur-sdk
 إعداد الكائن الرئيسيJavaScriptconst Zakkur = require('zakkur-sdk');
 
@@ -95,3 +95,4 @@ board.getHistory(),استرجاع سجل القرارات,لا يوجد,Array (H
 الموقع الرسمي: zakkur.com
 ---
 <p align="center"> <b>بكل فخر، تم بناء هذا النظام لتمكين جيل جديد من المؤسسات الذكية.</b>
+
