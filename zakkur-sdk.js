@@ -24,7 +24,7 @@ class Zakkur {
         this.#apiKey = apiKey;
         this.#baseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
         this.#config = { timeout, retries };
-        this.version = '3.0.1';
+        this.version = '3.0.2';
 
         this.board = this.#initBoardModule();
         this.agents = this.#initAgentsProxy();
@@ -43,7 +43,6 @@ class Zakkur {
         };
 
         let body = null;
-
         if (isFileUpload) {
             body = payload;
         } else if (payload) {
@@ -59,7 +58,16 @@ class Zakkur {
                 const response = await fetch(url, { method, headers, body, signal: controller.signal });
                 clearTimeout(timeoutId);
 
-                const result = await response.json();
+                const contentType = response.headers.get("content-type");
+                let result;
+
+                // التحقق من أن الرد بصيغة JSON قبل المعالجة لضمان القوة والاستقرار
+                if (contentType && contentType.includes("application/json")) {
+                    result = await response.json();
+                } else {
+                    const text = await response.text();
+                    throw new ZakkurError("Unexpected non-JSON response from server", response.status, 'INVALID_RESPONSE_FORMAT', { raw: text });
+                }
 
                 if (!response.ok) {
                     if ([429, 503].includes(response.status) && attempt < maxAttempts) {
@@ -83,6 +91,7 @@ class Zakkur {
                 clearTimeout(timeoutId);
                 if (error.name === 'AbortError') throw new ZakkurError("Request Timeout", 408, 'TIMEOUT');
                 if (error instanceof ZakkurError) throw error;
+                
                 if (attempt >= maxAttempts) throw new ZakkurError(error.message, 500, 'NET_ERROR');
                 
                 attempt++;
@@ -104,7 +113,6 @@ class Zakkur {
             get(target, role) {
                 const agentRole = role.toLowerCase();
                 return {
-                    // [تصحيح]: تم تغيير context إلى prompt ليتوافق مع apiController.js
                     consult: (userPrompt, options = {}) => 
                         self.#executeRequest(`/agent/${agentRole}/consult`, 'POST', { 
                             prompt: userPrompt, 
@@ -112,7 +120,7 @@ class Zakkur {
                         }),
                     execute: (task, options = {}) => 
                         self.#executeRequest(`/agent/${agentRole}/execute`, 'POST', { 
-                            prompt: task, // الـ Backend يستلمها كـ prompt أيضاً في المسارات الخارجية
+                            prompt: task,
                             threadId: options.threadId 
                         })
                 };
