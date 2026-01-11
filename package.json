@@ -1,6 +1,6 @@
 {
     "name": "zakkur-sdk",
-    "version": "1.0.0",
+    "version": "1.0.4",
     "description": "The official Enterprise AI SDK for Zakkur - Digital C-Suite and Decision Engine.",
     "main": "zakkur-sdk.js",
     "scripts": {
@@ -27,4 +27,5 @@
       "url": "https://github.com/SopenAi/zakkur-sdk.git"
     },
     "homepage": "https://zakkur.com"
+
   }
