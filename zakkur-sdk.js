@@ -24,7 +24,7 @@ class Zakkur {
         this.#apiKey = apiKey;
         this.#baseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
         this.#config = { timeout, retries };
-        this.version = '3.0.0';
+        this.version = '3.0.1';
 
         this.board = this.#initBoardModule();
         this.agents = this.#initAgentsProxy();
@@ -104,14 +104,15 @@ class Zakkur {
             get(target, role) {
                 const agentRole = role.toLowerCase();
                 return {
-                    consult: (prompt, options = {}) => 
+                    // [تصحيح]: تم تغيير context إلى prompt ليتوافق مع apiController.js
+                    consult: (userPrompt, options = {}) => 
                         self.#executeRequest(`/agent/${agentRole}/consult`, 'POST', { 
-                            context: prompt, 
+                            prompt: userPrompt, 
                             threadId: options.threadId 
                         }),
                     execute: (task, options = {}) => 
                         self.#executeRequest(`/agent/${agentRole}/execute`, 'POST', { 
-                            task: task, 
+                            prompt: task, // الـ Backend يستلمها كـ prompt أيضاً في المسارات الخارجية
                             threadId: options.threadId 
                         })
                 };
